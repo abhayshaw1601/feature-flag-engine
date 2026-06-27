@@ -1,6 +1,11 @@
 # Dependency directories
 node_modules/
 
+# Next.js build and cache
+.next/
+out/
+*.tsbuildinfo
+
 # Environment files
 .env
 .env.local
