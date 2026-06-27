@@ -11,6 +11,7 @@ interface FlagCardProps {
 export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
     const [percentage, setPercentage] = useState(flag.rolloutPercentage);
     const [newWhitelistUser, setNewWhitelistUser] = useState("");
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
     // Generic backend synchronization helper
     const updateFlagData = async (updatedFields: Partial<FeatureFlag>) => {
@@ -27,9 +28,14 @@ export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
     };
 
     const handleDeleteFlag = async () => {
-        if (!window.confirm(`Are you sure you want to delete feature flag "${flag.key}"?`)) {
+        if (!isConfirmingDelete) {
+            setIsConfirmingDelete(true);
+            setTimeout(() => {
+                setIsConfirmingDelete(false);
+            }, 3000); // Auto-reset after 3 seconds
             return;
         }
+
         try {
             const res = await fetch(`http://localhost:5000/api/v1/flags/${flag.key}`, {
                 method: "DELETE",
@@ -86,15 +92,20 @@ export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
                     <button
                         id={`delete-btn-${flag.key}`}
                         onClick={handleDeleteFlag}
-                        title="Delete Feature Flag"
-                        className="text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 p-2 rounded-lg transition transform active:scale-95"
+                        title={isConfirmingDelete ? "Click again to confirm delete" : "Delete Feature Flag"}
+                        className={`flex items-center gap-1.5 p-2 rounded-lg transition transform active:scale-95 text-sm font-semibold ${
+                            isConfirmingDelete
+                                ? "bg-rose-950/80 text-rose-400 border border-rose-900"
+                                : "text-slate-400 hover:text-rose-400 hover:bg-slate-700/60"
+                        }`}
                     >
                         <Trash2 size={20} />
+                        {isConfirmingDelete && <span className="text-xs">Confirm?</span>}
                     </button>
                 </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-700">
+            <div className="flex flex-col gap-5 pt-4 border-t border-slate-700">
                 {/* Left Column: Rollout Percentage Slider */}
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">

@@ -135,7 +135,7 @@ export default function Dashboard() {
                     <p className="text-slate-500 text-sm">No feature flags match your search query.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredFlags.map((flag) => (
                         <FlagCard key={flag._id} flag={flag} refreshFlags={fetchFlags} />
                     ))}
