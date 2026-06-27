@@ -4,6 +4,8 @@ import { Plus, Search, ShieldAlert, Activity, CheckCircle, HelpCircle } from "lu
 import { FeatureFlag } from "../types";
 import FlagCard from "../components/FlagCard";
 import CreateFlagModal from "../components/CreateFlagModal";
+import { useFlags } from "@/components/FlagProvider";
+import { PerspectiveCarousel } from "@/components/ui/perspective-carousel";
 
 export default function Dashboard() {
     const [flags, setFlags] = useState<FeatureFlag[]>([]);
@@ -44,8 +46,8 @@ export default function Dashboard() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-blue-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                        Control Center
+                    <h1 className="text-2xl font-bold text-slate-100">
+                        Feature Flags
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">
                         Real-time feature toggling, progressive traffic rollouts, and user whitelist targeting.
@@ -54,48 +56,48 @@ export default function Dashboard() {
 
                 <button
                     onClick={() => setIsCreateOpen(true)}
-                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2.5 rounded-xl transition shadow-lg shadow-blue-550/20 active:scale-95 duration-100"
+                    className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-4 py-2 rounded-lg transition text-sm"
                 >
-                    <Plus size={18} />
+                    <Plus size={16} />
                     <span>Create New Flag</span>
                 </button>
             </div>
 
             {/* Metrics Widgets */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
-                    <div className="p-3 bg-blue-950/50 border border-blue-900/50 rounded-lg text-blue-400">
-                        <Activity size={24} />
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
+                    <div className="p-2.5 bg-slate-850 border border-slate-800 rounded-lg text-slate-400">
+                        <Activity size={20} />
                     </div>
                     <div>
                         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Total Schema Registries</p>
-                        <h4 className="text-2xl font-bold text-slate-100 mt-1">{flags.length}</h4>
+                        <h4 className="text-xl font-bold text-slate-200 mt-1">{flags.length}</h4>
                     </div>
                 </div>
 
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
-                    <div className="p-3 bg-emerald-950/50 border border-emerald-900/50 rounded-lg text-emerald-400">
-                        <CheckCircle size={24} />
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
+                    <div className="p-2.5 bg-slate-850 border border-slate-800 rounded-lg text-slate-400">
+                        <CheckCircle size={20} />
                     </div>
                     <div>
                         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Active Live Flags</p>
-                        <h4 className="text-2xl font-bold text-emerald-400 mt-1">{activeFlagsCount}</h4>
+                        <h4 className="text-xl font-bold text-slate-200 mt-1">{activeFlagsCount}</h4>
                     </div>
                 </div>
 
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
-                    <div className="p-3 bg-indigo-950/50 border border-indigo-900/50 rounded-lg text-indigo-400">
-                        <HelpCircle size={24} />
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center gap-4">
+                    <div className="p-2.5 bg-slate-850 border border-slate-800 rounded-lg text-slate-400">
+                        <HelpCircle size={20} />
                     </div>
                     <div>
                         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Inactive Rules</p>
-                        <h4 className="text-2xl font-bold text-slate-350 mt-1">{flags.length - activeFlagsCount}</h4>
+                        <h4 className="text-xl font-bold text-slate-200 mt-1">{flags.length - activeFlagsCount}</h4>
                     </div>
                 </div>
             </div>
 
             {/* Search & Actions Bar */}
-            <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
@@ -103,7 +105,7 @@ export default function Dashboard() {
                         placeholder="Search key or description..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 placeholder-slate-600 transition"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-705 placeholder-slate-600 transition"
                     />
                 </div>
             </div>
@@ -111,25 +113,25 @@ export default function Dashboard() {
             {/* Main Content Area */}
             {loading && flags.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-500">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-550 mb-4"></div>
                     <p className="text-sm">Fetching feature flags...</p>
                 </div>
             ) : error ? (
-                <div className="bg-rose-950/30 border border-rose-900/50 rounded-xl p-6 flex items-start gap-4 text-rose-200">
-                    <ShieldAlert className="text-rose-400 shrink-0 mt-0.5" size={20} />
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex items-start gap-4 text-slate-300">
+                    <ShieldAlert className="text-slate-400 shrink-0 mt-0.5" size={20} />
                     <div>
-                        <h5 className="font-semibold text-rose-300">Connection Error</h5>
+                        <h5 className="font-semibold text-slate-200">Connection Error</h5>
                         <p className="text-sm mt-1">{error}</p>
                         <button
                             onClick={fetchFlags}
-                            className="bg-rose-900/50 hover:bg-rose-900/70 border border-rose-800 text-rose-200 px-3.5 py-1.5 rounded-lg text-xs font-semibold mt-3 transition"
+                            className="bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 px-3.5 py-1.5 rounded-lg text-xs font-semibold mt-3 transition"
                         >
                             Retry Connection
                         </button>
                     </div>
                 </div>
             ) : filteredFlags.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/20 border border-dashed border-slate-800 rounded-xl">
+                <div className="text-center py-20 bg-slate-900 border border-dashed border-slate-800 rounded-xl">
                     <p className="text-slate-500 text-sm">No feature flags match your search query.</p>
                 </div>
             ) : (
@@ -140,6 +142,8 @@ export default function Dashboard() {
                 </div>
             )}
 
+            <AppSimulationSandbox />
+
             {/* Create Modal overlay */}
             <CreateFlagModal
                 isOpen={isCreateOpen}
@@ -147,5 +151,45 @@ export default function Dashboard() {
                 onCreated={fetchFlags}
             />
         </main>
+    );
+}
+
+function AppSimulationSandbox() {
+    const { flags, loading, evaluateFlags } = useFlags();
+
+    // Initialize a mock user session targeting India location rules
+    useEffect(() => {
+        evaluateFlags("abhay_dev_01", { country: "IN" });
+    }, []);
+
+    if (loading) return <p className="text-xs text-slate-500">Evaluating local device states...</p>;
+
+    return (
+        <div className="mt-12 p-6 bg-slate-900 border border-slate-800 rounded-xl max-w-6xl mx-auto">
+            <h4 className="text-md font-semibold text-slate-250 mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                Live Client Application Simulation View
+            </h4>
+            <p className="text-xs text-slate-500 mb-4">
+                Active User Target Identity context parsed: <code className="text-slate-400 font-mono">abhay_dev_01 (Location: IN)</code>
+            </p>
+
+            <div className="p-4 rounded-lg border border-slate-800 bg-slate-950 flex justify-between items-center">
+                <div>
+                    <span className="text-sm font-semibold text-slate-200">New Beta V2 Dashboard Experience Component</span>
+                    <p className="text-xs text-slate-500 mt-0.5">This section dynamically locks or unlocks based on live infrastructure rule sets.</p>
+                </div>
+
+                {flags["new-dashboard-v2"] ? (
+                    <span className="bg-slate-850 text-blue-400 border border-slate-800 px-3 py-1 rounded text-xs font-semibold uppercase">
+                        Enabled (True)
+                    </span>
+                ) : (
+                    <span className="bg-slate-850 text-slate-500 border border-slate-800 px-3 py-1 rounded text-xs font-semibold uppercase">
+                        Locked (False)
+                    </span>
+                )}
+            </div>
+        </div>
     );
 }

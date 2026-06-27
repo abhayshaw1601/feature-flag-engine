@@ -109,6 +109,24 @@ router.put('/:key', async (req, res) => {
     }
 });
 
+// DELETE: Delete a feature flag by key
+router.delete('/:key', async (req, res) => {
+    try {
+        const deletedFlag = await FeatureFlag.findOneAndDelete({ key: req.params.key });
+        if (!deletedFlag) {
+            return res.status(404).json({ error: `Flag with key '${req.params.key}' not found.` });
+        }
+
+        // Publish to message bus with deleted indicator
+        await redisClient.publish('flag-updates', JSON.stringify({ key: req.params.key, deleted: true }));
+        console.log(`📢 Broadcasted deletion for flag key: ${req.params.key}`);
+
+        res.json({ message: "Feature flag successfully deleted", key: req.params.key });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/stream', (req, res) => {
     // Set essential standard headers to keep HTTP connection alive continuously
     res.setHeader('Content-Type', 'text/event-stream');

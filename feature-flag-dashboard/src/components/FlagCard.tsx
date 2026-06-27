@@ -15,7 +15,7 @@ export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
     // Generic backend synchronization helper
     const updateFlagData = async (updatedFields: Partial<FeatureFlag>) => {
         try {
-            await fetch(`http://localhost:5000/api/v1/flags/${flag._id}`, {
+            await fetch(`http://localhost:5000/api/v1/flags/${flag.key}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ...flag, ...updatedFields }),
@@ -23,6 +23,24 @@ export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
             refreshFlags();
         } catch (err) {
             console.error("Failed to update flag metadata:", err);
+        }
+    };
+
+    const handleDeleteFlag = async () => {
+        if (!window.confirm(`Are you sure you want to delete feature flag "${flag.key}"?`)) {
+            return;
+        }
+        try {
+            const res = await fetch(`http://localhost:5000/api/v1/flags/${flag.key}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                refreshFlags();
+            } else {
+                console.error("Failed to delete flag");
+            }
+        } catch (err) {
+            console.error("Failed to delete flag:", err);
         }
     };
 
@@ -51,17 +69,29 @@ export default function FlagCard({ flag, refreshFlags }: FlagCardProps) {
                     <p className="text-slate-400 text-sm mt-2">{flag.description || "No description provided."}</p>
                 </div>
 
-                {/* Global Kill Switch Toggle */}
-                <button
-                    onClick={() => updateFlagData({ isActive: !flag.isActive })}
-                    className="focus:outline-none transition transform active:scale-95"
-                >
-                    {flag.isActive ? (
-                        <ToggleRight className="text-emerald-400 w-14 h-8" strokeWidth={1.5} />
-                    ) : (
-                        <ToggleLeft className="text-slate-500 w-14 h-8" strokeWidth={1.5} />
-                    )}
-                </button>
+                <div className="flex items-center gap-3">
+                    {/* Global Kill Switch Toggle */}
+                    <button
+                        onClick={() => updateFlagData({ isActive: !flag.isActive })}
+                        className="focus:outline-none transition transform active:scale-95"
+                    >
+                        {flag.isActive ? (
+                            <ToggleRight className="text-emerald-400 w-14 h-8" strokeWidth={1.5} />
+                        ) : (
+                            <ToggleLeft className="text-slate-500 w-14 h-8" strokeWidth={1.5} />
+                        )}
+                    </button>
+
+                    {/* Delete Feature Flag Button */}
+                    <button
+                        id={`delete-btn-${flag.key}`}
+                        onClick={handleDeleteFlag}
+                        title="Delete Feature Flag"
+                        className="text-slate-400 hover:text-rose-400 hover:bg-slate-700/60 p-2 rounded-lg transition transform active:scale-95"
+                    >
+                        <Trash2 size={20} />
+                    </button>
+                </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-700">
