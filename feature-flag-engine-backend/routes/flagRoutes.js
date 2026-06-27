@@ -1,6 +1,21 @@
 const router = require('express').Router();
 const FeatureFlag = require('../models/FeatureFlag');
 const { evaluateRules, isUserInRollout } = require('../utils/evaluator');
+const { redisClient } = require('../config/redis');
+const { redisSubscriber } = require('../config/redis');
+
+// Keep track of active open connections to prevent memory leaks
+let activeClients = [];
+
+// Subscribe the main thread Redis instance to the channel once on boot
+redisSubscriber.subscribe('flag-updates', (message) => {
+    const parsedFlag = JSON.parse(message);
+
+    // Broadcast the fresh configuration payload to every open client connection instantly
+    activeClients.forEach(client => {
+        client.res.write(`data: ${JSON.stringify(parsedFlag)}\n\n`);
+    });
+});
 
 // 1. RUNTIME EVALUATION: Used by application clients to get flag statuses
 router.post('/evaluate', async (req, res) => {
@@ -59,13 +74,59 @@ router.post('/', async (req, res) => {
 });
 
 // 4. DASHBOARD MANAGEMENT: Update sliders, killswitches, or whitelists
-router.put('/:id', async (req, res) => {
+// router.put('/:id', async (req, res) => {
+//     try {
+//         const updatedFlag = await FeatureFlag.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//         res.json(updatedFlag);
+//     } catch (err) {
+//         res.status(400).json({ error: err.message });
+//     }
+// });
+
+
+// PUT: Update flag changes (Kill switch toggle, sliders, or whitelists)
+// PUT: Update flag changes using the flag KEY (e.g., /api/v1/flags/new-dashboard-v2)
+router.put('/:key', async (req, res) => {
     try {
-        const updatedFlag = await FeatureFlag.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        // Find by the human-readable 'key' instead of the long hex '_id'
+        const updatedFlag = await FeatureFlag.findOneAndUpdate(
+            { key: req.params.key },
+            req.body,
+            { returnDocument: 'after' } // Fixes the Mongoose warning shown in image_9c1b22.png!
+        );
+
+        if (!updatedFlag) {
+            return res.status(404).json({ error: `Flag with key '${req.params.key}' not found.` });
+        }
+
+        // Publish to message bus
+        await redisClient.publish('flag-updates', JSON.stringify(updatedFlag));
+        console.log(`📢 Broadcasted update for flag key: ${updatedFlag.key}`);
+
         res.json(updatedFlag);
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
+});
+
+router.get('/stream', (req, res) => {
+    // Set essential standard headers to keep HTTP connection alive continuously
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders(); // Establish the immediate connection flush
+
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    activeClients.push(newClient);
+
+    console.log(`🔌 Client App Connected to SSE Stream. Total Active Pipelines: ${activeClients.length}`);
+
+    // When a user closes their app or disconnects, clean up memory allocation
+    req.on('close', () => {
+        activeClients = activeClients.filter(client => client.id !== clientId);
+        console.log(`Client App Disconnected. Remaining Active Pipelines: ${activeClients.length}`);
+    });
 });
 
 module.exports = router;

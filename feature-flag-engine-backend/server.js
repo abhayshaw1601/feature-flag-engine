@@ -9,7 +9,7 @@ app.use(express.json());
 
 // Enable CORS for Next.js control plane access
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
@@ -17,6 +17,10 @@ app.use(cors({
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/feature_flags')
     .then(() => console.log('🎯 MongoDB Bound Securely'))
     .catch(err => console.error('Database Connection Failure:', err));
+
+// redis connection 
+const { connectRedis } = require('./config/redis');
+connectRedis();
 
 // Mount Routes
 app.use('/api/v1/flags', flagRoutes);
